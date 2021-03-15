@@ -18,7 +18,12 @@ export class Token {
         return this._token || (this._token = new this());
     }
 
-    private async checkExpiredToken(repo_token: Repository<DBToken>): Promise<void> {
+    /**
+     * Checks for expired token
+     * @private
+     * @internal
+     */
+    private async checkExpiredToken(): Promise<void> {
         logger.debug('Checking for expired token');
         const expiredDateTime = new Date(Date.now());
         expiredDateTime.setMinutes(expiredDateTime.getMinutes() - 15);

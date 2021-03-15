@@ -93,6 +93,11 @@ export class Account {
         };
     }
 
+    /**
+     * Creates an account for the given user
+     * @param {string} username Username to create
+     * @param {string} password Password for the given username
+     */
     async register(username: string, password: string): Promise<IResponse> {
         const data = await this._repositoryUser.findOne({
             select: ['id'],

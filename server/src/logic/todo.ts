@@ -22,6 +22,7 @@ export class Todo {
      * @param {number} zip
      * @param {string} town
      * @param {string} image
+     * @returns Promise<IResponse> Returns status and further information, once the promise is resolved
      */
     async create(
         terminalId: number,
@@ -58,6 +59,11 @@ export class Todo {
         };
     }
 
+    /**
+     * Shows a list of all open todo's
+     * @param {DBToDo} showFinished Trigger or even show finished todos
+     * @returns Promise<IResponse> Returns status and further information, once the promise is resolved
+     */
     async getList(showFinished = false): Promise<IResponse> {
         let list: DBToDo[];
         if (showFinished)
@@ -84,6 +90,11 @@ export class Todo {
         };
     }
 
+    /**
+     * Search for a given todo item
+     * @param {number} todoId Id of the searched item
+     * @returns Promise<IResponse> Returns status and further information, once the promise is resolved
+     */
     async getTodoById(todoId: number): Promise<IResponse> {
         const todo = await this._repository_todo.findOne({
             where: {
@@ -101,7 +112,13 @@ export class Todo {
         };
     }
 
-    async setStatus(todoId: number, todo: DBToDo): Promise<IResponse> {
+    /**
+     * Toggles the isFinished status of the given id
+     * @param {number} todoId todoId
+     * @param {DBToDo} todo Item to toggle
+     * @returns Promise<IResponse> Returns status and further information, once the promise is resolved
+     */
+    async toggleStatus(todoId: number, todo: DBToDo): Promise<IResponse> {
         todo.isFinished = !todo.isFinished;
 
         const updatedTodo = await this._repository_todo.save(todo);
