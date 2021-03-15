@@ -34,7 +34,7 @@ router.put(
             if (result.Code !== 200) return res.status(result.Code).send(result);
 
             const todoId: number = parseInt(req.params.todoId);
-            const todoResult = await todoHandle.setStatus(todoId, result.Data?.ToDo as DBToDo);
+            const todoResult = await todoHandle.toggleStatus(todoId, result.Data?.ToDo as DBToDo);
             return res.status(todoResult.Code).send(todoResult);
         } catch (err) {
             logger.error(err.message);
