@@ -27,7 +27,7 @@ export class Token {
         logger.debug('Checking for expired token');
         const expiredDateTime = new Date(Date.now());
         expiredDateTime.setMinutes(expiredDateTime.getMinutes() - 15);
-        const expiredToken = await repo_token
+        const expiredToken = await this._repository_token
             .createQueryBuilder()
             .where('updatedAt < :updated', {
                 updated: expiredDateTime.getTime() / 1000,
@@ -36,7 +36,7 @@ export class Token {
         logger.debug(`Found ${expiredToken.length} expired token`);
         expiredToken.forEach((item: DBToken) => {
             logger.debug(`Deleting expired token for user ${item.user.username}`);
-            repo_token.delete(item);
+            this._repository_token.delete(item);
         });
     }
 
