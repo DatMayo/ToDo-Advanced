@@ -20,10 +20,10 @@ router.post(
             .withMessage("The given password can't be empty")
             .isLength({ min: 8 })
             .withMessage('The password needs to be at least 8 characters long'),
-        body('confirmPassword')
+        body('passwordConfirm')
             .not()
             .isEmpty()
-            .withMessage("The password cornfirmation can't be emptry")
+            .withMessage("The password confirmation can't be emptry")
             .isLength({ min: 8 })
             .withMessage('The password confirmation needs to be at least 8 characters long')
 
