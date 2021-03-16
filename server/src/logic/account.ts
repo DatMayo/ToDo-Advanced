@@ -131,7 +131,7 @@ export class Account {
         return {
             Code: 200,
             Success: {
-                msg: 'Account created successful',
+                msg: 'Your account has been created',
             },
         };
     }
