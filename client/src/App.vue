@@ -1,25 +1,26 @@
 <template>
   <div id="app">
-    <Login v-if="!isLoggedin" />
-    <!--    <img alt="Vue logo" src="./assets/logo.png" />-->
-    <!--    <HelloWorld msg="Welcome to Your Vue.js App" />-->
+    <Login v-if="token.length === 0" />
+    <ToDo v-else />
   </div>
 </template>
 
 <script>
-// import HelloWorld from "./components/HelloWorld.vue";
 import Login from './components/Login.vue';
+import ToDo from './components/ToDo';
 
 export default {
   name: 'App',
   data() {
     return {
-      isLoggedin: false
+      API_URL: 'http://localhost:8181',
+      id: 0,
+      token: ''
     };
   },
   components: {
-    Login
-    //   HelloWorld,
+    Login,
+    ToDo
   }
 };
 </script>
