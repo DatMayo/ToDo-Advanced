@@ -210,4 +210,7 @@ ul {
 .registerBtn {
   width: 100%;
 }
+.container {
+  margin-top: 5em;
+}
 </style>

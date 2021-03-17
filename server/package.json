@@ -6,6 +6,8 @@
     "scripts": {
         "build": "tsc",
         "debug": "nodemon ./dist/main.js",
+        "deploy": "npm run build && openode deploy",
+        "start": "node ./dist/main.js",
         "watch": "tsc -w"
     },
     "keywords": [],

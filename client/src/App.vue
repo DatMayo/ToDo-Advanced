@@ -13,7 +13,7 @@ export default {
   name: 'App',
   data() {
     return {
-      API_URL: 'http://localhost:8181',
+      API_URL: 'https://todoapi-mario.eu.openode.io',
       id: 0,
       token: ''
     };

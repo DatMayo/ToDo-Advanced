@@ -3,10 +3,93 @@
     <div class="row mb-4">
       <div class="col-sm"></div>
       <div class="col-sm-9 text-end">
-        <button type="button" class="btn btn-primary me-3">Add ToDo</button>
+        <button type="button" class="btn btn-primary me-3" @click="openModal">Add ToDo</button>
         <button type="button" class="btn btn-danger" @click="logout">Logout</button>
       </div>
       <div class="col-sm"></div>
+    </div>
+    <div
+      id="addToDo"
+      class="modal fade"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="staticBackdropLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel">Add new ToDo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-start">
+            <div class="alert alert-danger text-start" role="alert" v-if="newTodo.errors.length > 0">
+              There are some errors:
+              <ul>
+                <li v-for="error in newTodo.errors" :key="error.id">{{ error.msg }}</li>
+              </ul>
+            </div>
+            <div class="row">
+              <div class="col-sm">
+                <div class="mb-3">
+                  <label for="terminalId" class="form-label">Terminal ID</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="terminalId"
+                    placeholder="123456"
+                    v-model="newTodo.terminalId"
+                  />
+                </div>
+              </div>
+              <div class="col-sm ms-2">
+                <div class="mb-3">
+                  <label for="branch" class="form-label">Branch</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="branch"
+                    placeholder="Spk. Hameln"
+                    v-model="newTodo.branch"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-3">
+                <div class="mb-3">
+                  <label for="zip" class="form-label">ZIP</label>
+                  <input type="number" class="form-control" id="zip" placeholder="31785" v-model="newTodo.zip" />
+                </div>
+              </div>
+              <div class="col-sm ms-2">
+                <div class="mb-3">
+                  <label for="town" class="form-label">Town</label>
+                  <input type="text" class="form-control" id="town" placeholder="Hameln" v-model="newTodo.town" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm">
+                <div class="mb-3">
+                  <label for="address" class="form-label">Address</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="address"
+                    placeholder="Bahnhofsplatz 23"
+                    v-model="newTodo.address"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click.prevent="createTodo">Save</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row">
       <div class="col-sm"></div>
@@ -59,17 +142,68 @@ export default {
     return {
       showFinished: false,
       todoList: [],
-      todoUpdateTimer: -1
+      todoUpdateTimer: -1,
+      todoModal: null,
+      todoModalHandle: null,
+      newTodo: {
+        terminalId: '',
+        branch: '',
+        zip: '',
+        town: '',
+        address: '',
+        errors: []
+      }
     };
+  },
+  beforeDestroy() {
+    clearInterval(this.todoUpdateTimer);
   },
   created() {
     this.updateTodoList();
   },
   methods: {
+    clearToDoWindow() {
+      this.newTodo.terminalId = '';
+      this.newTodo.branch = '';
+      this.newTodo.zip = '';
+      this.newTodo.town = '';
+      this.newTodo.address = '';
+    },
     clearCredentials() {
       localStorage.id = -1;
       localStorage.token = '';
       this.$parent.token = '';
+    },
+    createTodo() {
+      this.newTodo.errors = [];
+      if (this.newTodo.terminalId == '') this.newTodo.errors.push({ msg: 'Missing Terminal-ID' });
+      if (this.newTodo.branch == '') this.newTodo.errors.push({ msg: 'Missing Branch' });
+      if (this.newTodo.zip == '') this.newTodo.errors.push({ msg: 'Missing ZIP Code' });
+      if (this.newTodo.town == '') this.newTodo.errors.push({ msg: 'Missing Town' });
+      if (this.newTodo.address == '') this.newTodo.errors.push({ msg: 'Missing Address' });
+      if (this.newTodo.errors.length > 0) return;
+      this.axios
+        .post(
+          `${this.$parent.API_URL}/todo/create`,
+          {
+            terminalId: this.newTodo.terminalId,
+            branch: this.newTodo.branch,
+            address: this.newTodo.address,
+            zip: this.newTodo.zip,
+            town: this.newTodo.town
+          },
+          {
+            headers: { token: this.$parent.token }
+          }
+        )
+        .then((res) => {
+          this.todoModalHandle.hide();
+        })
+        .catch((err) => {
+          const response = err.response.data;
+          if (response.Code === 403) return this.clearCredentials();
+          for (const error of err.response.data.Error) this.newTodo.errors.push(error);
+        });
     },
     logout() {
       localStorage.clear();
@@ -95,6 +229,9 @@ export default {
           if (response.Code === 403) return this.clearCredentials();
         });
     },
+    openModal() {
+      this.todoModalHandle.show();
+    },
     updateTodoList() {
       this.axios
         .get(`${this.$parent.API_URL}/todo/list/${this.showFinished ? 'showfinished' : ''}`, {
@@ -112,8 +249,16 @@ export default {
         });
     }
   },
-  beforeDestroy() {
-    clearInterval(this.todoUpdateTimer);
+  mounted() {
+    const that = this;
+    this.todoModal = document.querySelector('#addToDo');
+    this.todoModalHandle = new bootstrap.Modal(this.todoModal, { backdrop: 'static' });
+    this.todoModal.addEventListener('shown.bs.modal', function () {
+      document.querySelector('#terminalId').focus();
+    });
+    this.todoModal.addEventListener('hidden.bs.modal', function () {
+      that.clearToDoWindow();
+    });
   }
 };
 </script>
@@ -124,9 +269,6 @@ table {
 }
 tr {
   cursor: pointer;
-}
-tr:first-child {
-  cursor: default;
 }
 tr:hover {
   background-color: rgba(0, 0, 0, 0.1);
@@ -144,7 +286,9 @@ tr.strikeout td:before {
   border-bottom: 1px solid #111;
   width: 100%;
 }
-
+ul {
+  margin-bottom: 0;
+}
 .row {
   --bs-gutter-x: 0;
 }
