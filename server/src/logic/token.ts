@@ -23,11 +23,11 @@ export class Token {
      * @private
      * @internal
      */
-    private async checkExpiredToken(): Promise<void> {
+    private async checkExpiredToken(repoToken: Repository<DBToken>): Promise<void> {
         logger.debug('Checking for expired token');
         const expiredDateTime = new Date(Date.now());
         expiredDateTime.setMinutes(expiredDateTime.getMinutes() - 15);
-        const expiredToken = await this._repository_token
+        const expiredToken = await repoToken
             .createQueryBuilder()
             .where('updatedAt < :updated', {
                 updated: expiredDateTime.getTime() / 1000,
@@ -36,7 +36,7 @@ export class Token {
         logger.debug(`Found ${expiredToken.length} expired token`);
         expiredToken.forEach((item: DBToken) => {
             logger.debug(`Deleting expired token for user ${item.user.username}`);
-            this._repository_token.delete(item);
+            repoToken.delete(item);
         });
     }
 
