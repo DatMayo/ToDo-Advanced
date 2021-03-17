@@ -21,6 +21,12 @@ export default {
   components: {
     Login,
     ToDo
+  },
+  mounted() {
+    this.$nextTick(function () {
+      this.id = localStorage.id;
+      this.token = localStorage.token ? localStorage.token : '';
+    });
   }
 };
 </script>
@@ -32,6 +38,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 10px;
 }
 </style>
