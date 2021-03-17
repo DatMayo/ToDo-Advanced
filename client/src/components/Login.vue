@@ -155,6 +155,8 @@ export default {
         .then((res) => {
           this.$parent.id = res.data.Data.id;
           this.$parent.token = res.data.Data.tokenId;
+          localStorage.setItem('id', res.data.Data.id);
+          localStorage.setItem('token', res.data.Data.tokenId);
         })
         .catch((err) => {
           for (const error of err.response.data.Error) this.login.errors.push(error);
@@ -196,6 +198,7 @@ export default {
 ul {
   margin-bottom: 0;
 }
+
 #login,
 #register {
   border: 1px solid #dee2e6;
