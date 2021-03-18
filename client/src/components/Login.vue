@@ -25,6 +25,7 @@
                   v-model="login.username"
                   placeholder="jane.doe"
                   @keydown.prevent.enter="doLogin"
+                  :disabled="login.disabled"
                 />
               </div>
             </div>
@@ -40,15 +41,29 @@
                   placeholder="password"
                   ref="password"
                   @keydown.prevent.enter="doLogin"
+                  :disabled="login.disabled"
                 />
               </div>
             </div>
             <div class="row">
               <div class="col-sm">
-                <button class="btn btn-secondary registerBtn" @click.prevent="showLogin = false">No Account?</button>
+                <button
+                  class="btn btn-secondary registerBtn"
+                  @click.prevent="showLogin = false"
+                  :disabled="login.disabled"
+                >
+                  No Account?
+                </button>
               </div>
               <div class="col-sm">
-                <button type="submit" class="btn btn-primary signinBtn" @click.prevent="doLogin">Sign in</button>
+                <button
+                  type="submit"
+                  class="btn btn-primary signinBtn"
+                  @click.prevent="doLogin"
+                  :disabled="login.disabled"
+                >
+                  Sign in
+                </button>
               </div>
             </div>
           </form>
@@ -71,6 +86,8 @@
                   id="registerUsername"
                   v-model="register.username"
                   placeholder="jane.doe"
+                  :disabled="register.disabled"
+                  @keydown.prevent.enter="doRegister"
                 />
               </div>
             </div>
@@ -84,6 +101,8 @@
                   class="form-control"
                   v-model="register.password"
                   placeholder="password"
+                  :disabled="register.disabled"
+                  @keydown.prevent.enter="doRegister"
                 />
               </div>
             </div>
@@ -97,15 +116,30 @@
                   class="form-control"
                   v-model="register.passwordConfirm"
                   placeholder="password"
+                  :disabled="register.disabled"
+                  @keydown.prevent.enter="doRegister"
                 />
               </div>
             </div>
             <div class="row">
               <div class="col-sm">
-                <button class="btn btn-secondary signinBtn" @click.prevent="showLogin = true">Have Account?</button>
+                <button
+                  class="btn btn-secondary signinBtn"
+                  @click.prevent="showLogin = true"
+                  :disabled="register.disabled"
+                >
+                  Have Account?
+                </button>
               </div>
               <div class="col-sm">
-                <button type="submit" class="btn btn-primary registerBtn" @click.prevent="doRegister">Register</button>
+                <button
+                  type="submit"
+                  class="btn btn-primary registerBtn"
+                  @click.prevent="doRegister"
+                  :disabled="register.disabled"
+                >
+                  Register
+                </button>
               </div>
             </div>
           </form>
@@ -122,12 +156,14 @@ export default {
   data() {
     return {
       login: {
+        disabled: false,
         username: '',
         password: '',
         errors: [],
         successMessage: ''
       },
       register: {
+        disabled: false,
         username: '',
         password: '',
         passwordConfirm: '',
@@ -147,11 +183,16 @@ export default {
       if (this.login.username == '') this.login.errors.push({ msg: 'Please enter a username' });
       if (this.login.password == '') this.login.errors.push({ msg: 'Please enter a password' });
       if (this.login.errors.length > 0) return;
+      this.login.disabled = true;
       this.axios
-        .post(`${this.$parent.API_URL}/account/login`, {
-          username: this.login.username,
-          password: this.login.password
-        })
+        .post(
+          `${this.$parent.API_URL}/account/login`,
+          {
+            username: this.login.username,
+            password: this.login.password
+          },
+          { timeout: 500 }
+        )
         .then((res) => {
           this.$parent.id = res.data.Data.id;
           this.$parent.token = res.data.Data.tokenId;
@@ -159,7 +200,12 @@ export default {
           localStorage.setItem('token', res.data.Data.tokenId);
         })
         .catch((err) => {
+          if (err.code === 'ECONNABORTED')
+            return this.login.errors.push({ msg: 'Could not reach server, please try again later' });
           for (const error of err.response.data.Error) this.login.errors.push(error);
+        })
+        .finally(() => {
+          this.login.disabled = false;
         });
     },
     doRegister: async function () {
@@ -169,19 +215,29 @@ export default {
       if (this.register.passwordConfirm == '')
         this.register.errors.push({ msg: 'Please enter a password confirmation' });
       if (this.register.errors.length > 0) return;
+      this.register.disabled = true;
       this.axios
-        .post(`${this.$parent.API_URL}/account/register`, {
-          username: this.register.username,
-          password: this.register.password,
-          passwordConfirm: this.register.passwordConfirm
-        })
+        .post(
+          `${this.$parent.API_URL}/account/register`,
+          {
+            username: this.register.username,
+            password: this.register.password,
+            passwordConfirm: this.register.passwordConfirm
+          },
+          { timeout: 500 }
+        )
         .then((res) => {
           this.login.username = this.register.username;
           this.login.successMessage = res.data.Success.msg;
           this.showLogin = true;
         })
         .catch((err) => {
+          if (err.code === 'ECONNABORTED')
+            return this.register.errors.push({ msg: 'Could not reach server, please try again later' });
           for (const error of err.response.data.Error) this.register.errors.push(error);
+        })
+        .finally(() => {
+          this.register.disabled = false;
         });
     }
   },
