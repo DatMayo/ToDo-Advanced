@@ -125,12 +125,27 @@
     <div class="row">
       <div class="col-sm"></div>
       <div class="col-sm-9">
-        <div class="form-check form-switch text-start">
-          <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" v-model="showFinished" />
-          <label class="form-check-label" for="flexSwitchCheckDefault">Show finished</label>
+        <div class="row">
+          <div class="col-sm">
+            <div class="form-check form-switch text-start">
+              <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" v-model="showFinished" />
+              <label class="form-check-label" for="flexSwitchCheckDefault">Show finished</label>
+            </div>
+          </div>
+          <div class="col-sm text-end fw-bold" :class="coloredMs">{{ performance.ms }} ms</div>
         </div>
       </div>
       <div class="col-sm"></div>
+    </div>
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+      <div id="liveToast" class="toast bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header text-start">
+          <strong class="me-auto">WARNING!</strong>
+        </div>
+        <div class="toast-body text-start text-white">
+          Could not reach backend server.<br />I'll try to reconnect until the server is back up!
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -145,6 +160,8 @@ export default {
       todoUpdateTimer: -1,
       todoModal: null,
       todoModalHandle: null,
+      toast: null,
+      toastHandle: null,
       newTodo: {
         terminalId: '',
         branch: '',
@@ -152,7 +169,13 @@ export default {
         town: '',
         address: '',
         errors: []
-      }
+      },
+      performance: {
+        t1: 0,
+        t2: 0,
+        ms: 0
+      },
+      error: ''
     };
   },
   beforeDestroy() {
@@ -161,7 +184,21 @@ export default {
   created() {
     this.updateTodoList();
   },
+  computed: {
+    coloredMs() {
+      let textColor = 'text-dark';
+      if (this.performance.ms <= 120) textColor = 'text-success';
+      else if (this.performance.ms <= 250) textColor = 'text-warning';
+      else textColor = 'text-danger';
+      return textColor;
+    }
+  },
   methods: {
+    backendTimeout() {
+      this.toastHandle.show();
+      this.todoUpdateTimer = setTimeout(this.updateTodoList, 1000);
+      this.todoList = [];
+    },
     clearToDoWindow() {
       this.newTodo.terminalId = '';
       this.newTodo.branch = '';
@@ -193,7 +230,8 @@ export default {
             town: this.newTodo.town
           },
           {
-            headers: { token: this.$parent.token }
+            headers: { token: this.$parent.token },
+            timeout: 1000
           }
         )
         .then((res) => {
@@ -201,7 +239,7 @@ export default {
         })
         .catch((err) => {
           const response = err.response.data;
-          if (response.Code === 403) return this.clearCredentials();
+          if (response.Code === 403) return this.backendTimeout();
           for (const error of err.response.data.Error) this.newTodo.errors.push(error);
         });
     },
@@ -215,7 +253,8 @@ export default {
           `${this.$parent.API_URL}/todo/toggle/${id}`,
           {},
           {
-            headers: { token: this.$parent.token }
+            headers: { token: this.$parent.token },
+            timeout: 1000
           }
         )
         .then((res) => {
@@ -225,6 +264,7 @@ export default {
           this.todoUpdateTimer = setTimeout(this.updateTodoList, 1000);
         })
         .catch((err) => {
+          if (err.code === 'ECONNABORTED') return this.backendTimeout();
           const response = err.response.data;
           if (response.Code === 403) return this.clearCredentials();
         });
@@ -233,19 +273,26 @@ export default {
       this.todoModalHandle.show();
     },
     updateTodoList() {
+      this.performance.t1 = performance.now();
       this.axios
         .get(`${this.$parent.API_URL}/todo/list/${this.showFinished ? 'showfinished' : ''}`, {
-          headers: { token: this.$parent.token }
+          headers: { token: this.$parent.token },
+          timeout: 1000
         })
         .then((res) => {
           this.todoList = res.data.Data.ToDos;
           this.todoUpdateTimer = setTimeout(this.updateTodoList, 1000);
         })
         .catch((err) => {
+          if (err.code === 'ECONNABORTED') return this.backendTimeout();
           const response = err.response.data;
           if (response.Code === 403) return this.clearCredentials();
 
           this.todoUpdateTimer = setTimeout(this.updateTodoList, 1000);
+        })
+        .finally(() => {
+          this.performance.t2 = performance.now();
+          this.performance.ms = Math.round(this.performance.t2 - this.performance.t1);
         });
     }
   },
@@ -259,6 +306,8 @@ export default {
     this.todoModal.addEventListener('hidden.bs.modal', function () {
       that.clearToDoWindow();
     });
+    this.toast = document.querySelector('#liveToast');
+    this.toastHandle = new bootstrap.Toast(this.toast, { delay: 2500 });
   }
 };
 </script>
