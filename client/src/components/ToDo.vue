@@ -207,7 +207,6 @@ export default {
       this.newTodo.address = '';
     },
     clearCredentials() {
-      localStorage.id = -1;
       localStorage.token = '';
       this.$parent.token = '';
     },

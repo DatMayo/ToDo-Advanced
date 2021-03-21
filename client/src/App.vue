@@ -1,30 +1,28 @@
 <template>
   <div id="app">
-    <Login v-if="token.length === 0" />
-    <ToDo v-else />
+    <Auth v-if="token.length === 0" :API_URL="API_URL" />
+    <ToDo v-else :API_URL="API_URL" />
   </div>
 </template>
 
 <script>
-import Login from './components/Login.vue';
+import Auth from './components/Auth/Auth.vue';
 import ToDo from './components/ToDo';
 
 export default {
   name: 'App',
   data() {
     return {
-      API_URL: 'http://88.214.56.14:8181',
-      id: 0,
+      API_URL: 'https://localhost:8181',
       token: ''
     };
   },
   components: {
-    Login,
+    Auth,
     ToDo
   },
   mounted() {
     this.$nextTick(function () {
-      this.id = localStorage.id;
       this.token = localStorage.token ? localStorage.token : '';
     });
   }
