@@ -32,7 +32,7 @@
               <td>{{ todo.terminalId }}</td>
               <td>{{ todo.branch }}</td>
               <td>{{ todo.address }}</td>
-              <td>{{ todo.zip }}</td>
+              <td>{{ todo.zip.toString().padStart(5, '0') }}</td>
               <td>{{ todo.town }}</td>
             </tr>
           </tbody>
