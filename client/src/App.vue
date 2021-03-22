@@ -7,13 +7,13 @@
 
 <script>
 import Auth from './components/Auth/Auth.vue';
-import ToDo from './components/ToDo';
+import ToDo from './components/ToDo/ToDo.vue';
 
 export default {
   name: 'App',
   data() {
     return {
-      API_URL: 'https://localhost:8181',
+      API_URL: 'http://localhost:8181',
       token: ''
     };
   },
